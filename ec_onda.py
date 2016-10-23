@@ -284,12 +284,18 @@ def graficar():
             sv0.valtext.set_text('Val: ' + str(expon))
             V0 = expon
         def actualizarPotencial(self, label):
+            global POTENTIAL, reiniciar
             if label == 'Libre':
                 POTENTIAL = 'free'
-            elif label == u'Escalón':
+            elif label == 'Escalon':
                 POTENTIAL = 'step'
             elif label == 'Barrera':
                 POTENTIAL = 'barrier'
+                reiniciar = 1
+        def actualizarTHCK(self, value):
+            print(value)
+            global THCK
+            THCK = value
 
 
     callback = Callback()
@@ -300,16 +306,23 @@ def graficar():
     breiniciar.on_clicked(callback.reiniciar)
 
     # para slider
-    axcolor = 'lightgoldenrodyellow'
-    axslider = pylab.axes([0.2, 0.15, 0.5, 0.03], axisbg=axcolor)
-    expon = antiexponencial(V0)
-    sv0 = Slider(axslider, 'V0', 0, 1, valinit=expon)
-    sv0.on_changed(callback.actualizarV0)
-    sv0.valtext.set_text('Val: ' + str(V0))
+    if POTENTIAL != 'free':
+        axcolor = 'lightgoldenrodyellow'
+        axslider = pylab.axes([0.2, 0.15, 0.5, 0.03], axisbg=axcolor) # x, y, largo, ancho
+        expon = antiexponencial(V0)
+        sv0 = Slider(axslider, 'V0', 0, 1, valinit=expon)
+        sv0.on_changed(callback.actualizarV0)
+        sv0.valtext.set_text('Val: ' + str(V0))
+
+    # para slider de THCK
+    if POTENTIAL == 'barrier':
+        axslider = pylab.axes([0.2, 0.1, 0.5, 0.03]) # x, y, largo, ancho
+        sTHCK = Slider(axslider, 'THCK', 15, 700, valinit=THCK)
+        sTHCK.on_changed(callback.actualizarTHCK)
 
     # para CheckButton
-    rax = pylab.axes([0.05, 0.4, 0.1, 0.15])
-    check = RadioButtons(rax, ('2 Hz', '4 Hz', '6 Hz'), (False, True, True))
+    rax = pylab.axes([0.81, 0.5, 0.17, 0.2])
+    check = RadioButtons(rax, ('Libre', 'Escalon', 'Barrera'), (False, True, True)) # x, y, largo, ancho
     check.on_clicked(callback.actualizarPotencial)
 
     pylab.subplots_adjust(right=0.8,  bottom=0.25)
