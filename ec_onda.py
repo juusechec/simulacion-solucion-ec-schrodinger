@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# coding: latin-1
 #=============================================================================
 #
 #               Quantum Mechanical Simulation using Finite-Difference
@@ -48,9 +50,11 @@ import numpy as np
 #from matplotlib import pylab
 #from pylab import *
 import matplotlib.pyplot as pylab
-from matplotlib.widgets import Slider, Button, RadioButtons
+from matplotlib.widgets import Slider, Button, RadioButtons, CheckButtons
+import os
 
 reiniciar = 0
+salir = 0
 
 #=============================================================================
 #
@@ -97,8 +101,6 @@ prescaler = 10
 V0ant = None
 
 def graficar():
-    # Set pylab to interactive mode so plots update when run outside ipython
-    pylab.ion()
     #=========================================================================
     # Utility functions
     #  Defines a quick Gaussian pulse function to act as an envelope to the wave
@@ -158,6 +160,7 @@ def graficar():
     global E
     global prescaler
     global V0ant
+    global reiniciar
 
     #=========================================================================
     # Code begins
@@ -280,6 +283,13 @@ def graficar():
             expon = exponencial(value)
             sv0.valtext.set_text('Val: ' + str(expon))
             V0 = expon
+        def actualizarPotencial(self, label):
+            if label == 'Libre':
+                POTENTIAL = 'free'
+            elif label == u'Escalón':
+                POTENTIAL = 'step'
+            elif label == 'Barrera':
+                POTENTIAL = 'barrier'
 
 
     callback = Callback()
@@ -296,6 +306,11 @@ def graficar():
     sv0 = Slider(axslider, 'V0', 0, 1, valinit=expon)
     sv0.on_changed(callback.actualizarV0)
     sv0.valtext.set_text('Val: ' + str(V0))
+
+    # para CheckButton
+    rax = pylab.axes([0.05, 0.4, 0.1, 0.15])
+    check = RadioButtons(rax, ('2 Hz', '4 Hz', '6 Hz'), (False, True, True))
+    check.on_clicked(callback.actualizarPotencial)
 
     pylab.subplots_adjust(right=0.8,  bottom=0.25)
 
@@ -325,7 +340,8 @@ def graficar():
             if contador > prescaler:
                 contador = 0
                 global reiniciar
-                if reiniciar == 1:
+                if reiniciar == 1 or salir == 1:
+                    reiniciar = 0
                     return
                 #  Compute observable probability for the plot.
                 psi_p = psi_r[PR]**2 + psi_i[PR]**2
@@ -340,11 +356,24 @@ def graficar():
                 pylab.pause(0.00001)
             else:
                 contador += 1
-    # So the windows don't auto-close at the end if run outside ipython
-    pylab.ioff()
 
-pylab.figure()
-while reiniciar == 0:
+
+def handle_close(evt):
+    global salir
+    print(salir)
+    salir = 1
+    print(salir)
+    print('Closed')
+    # os._exit()
+    # quit()
+    # print('Closed Figure!')
+
+fig = pylab.figure()
+# Set pylab to interactive mode so plots update when run outside ipython
+pylab.ion()
+fig.canvas.mpl_connect('close_event', handle_close)
+while reiniciar == 0 and salir == 0:
     pylab.clf()
     graficar()
-    reiniciar = 0
+
+pylab.ioff()
